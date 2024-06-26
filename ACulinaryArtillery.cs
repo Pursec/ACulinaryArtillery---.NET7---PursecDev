@@ -7,6 +7,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 
 namespace ACulinaryArtillery
@@ -85,7 +86,16 @@ namespace ACulinaryArtillery
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
             }
             
-
+        }
+        public override void StartClientSide(ICoreClientAPI api)
+        {
+            base.StartClientSide(api);
+            var meatHookTransformConfig = new TransformConfig
+            {
+                AttributeName = "meatHookTransform",
+                Title = "On Meathook"
+            };
+            GuiDialogTransformEditor.extraTransforms.Add(meatHookTransformConfig);
         }
 
         public override void Dispose()
