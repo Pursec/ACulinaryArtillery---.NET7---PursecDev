@@ -1,4 +1,5 @@
-﻿using Cairo;
+﻿using ACulinaryArtillery.Util;
+using Cairo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -130,7 +131,7 @@ namespace ACulinaryArtillery
             output.Attributes["expandedSats"] = new FloatArrayAttribute(sat.ToArray());
         }
 
-        public void OnCreatedByKneading(List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>> input, ItemStack output)
+        public void OnCreatedByKneading(List<KeyValuePair<ItemSlot, TagIngredient>> input, ItemStack output)
         {
             List<string> ingredients = new List<string>();
             float[] sat = new float[6];
@@ -1856,7 +1857,7 @@ namespace ACulinaryArtillery
 
     public interface IExpandedFood
     {
-        void OnCreatedByKneading(List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>> input, ItemStack output);
+        void OnCreatedByKneading(List<KeyValuePair<ItemSlot, TagIngredient>> input, ItemStack output);
         void OnCreatedByGrinding(ItemStack input, ItemStack output);
     }
 

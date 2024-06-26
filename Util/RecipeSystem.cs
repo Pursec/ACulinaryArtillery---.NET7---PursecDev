@@ -11,6 +11,7 @@ using Vintagestory.ServerMods;
 using Vintagestory.GameContent;
 using Vintagestory.API.Datastructures;
 using Microsoft.Win32;
+using ACulinaryArtillery.Util;
 
 namespace ACulinaryArtillery
 {
@@ -151,7 +152,7 @@ namespace ACulinaryArtillery
         {
             int outputStackSize = 0;
 
-            List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>> matched = pairInput(inputSlots);
+            List<KeyValuePair<ItemSlot, TagIngredient>> matched = pairInput(inputSlots);
             if (matched == null) return false;
 
             outputStackSize = getOutputSize(matched);
@@ -159,7 +160,7 @@ namespace ACulinaryArtillery
             return outputStackSize >= 0;
         }
 
-        List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>> pairInput(ItemSlot[] inputStacks)
+        List<KeyValuePair<ItemSlot, TagIngredient>> pairInput(ItemSlot[] inputStacks)
         {
             List<int> alreadyFound = new List<int>();
 
@@ -168,7 +169,7 @@ namespace ACulinaryArtillery
 
             if (inputSlotsList.Count != Ingredients.Length) return null;
 
-            List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>> matched = new List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>>();
+            List<KeyValuePair<ItemSlot, TagIngredient>> matched = new List<KeyValuePair<ItemSlot, TagIngredient>>();
 
             while (inputSlotsList.Count > 0)
             {
@@ -177,11 +178,11 @@ namespace ACulinaryArtillery
 
                 for (int i = 0; i < Ingredients.Length; i++)
                 {
-                    CraftingRecipeIngredient ingred = Ingredients[i].GetMatch(inputSlot.Itemstack);
+                    TagIngredient ingred = (TagIngredient)Ingredients[i].GetMatch(inputSlot.Itemstack);
 
                     if (ingred != null && !alreadyFound.Contains(i))
                     {
-                        matched.Add(new KeyValuePair<ItemSlot, CraftingRecipeIngredient>(inputSlot, ingred));
+                        matched.Add(new KeyValuePair<ItemSlot, TagIngredient>(inputSlot, ingred));
                         alreadyFound.Add(i);
                         found = true;
                         break;
@@ -201,14 +202,14 @@ namespace ACulinaryArtillery
         }
 
 
-        int getOutputSize(List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>> matched)
+        int getOutputSize(List<KeyValuePair<ItemSlot, TagIngredient>> matched)
         {
             int outQuantityMul = -1;
 
             foreach (var val in matched)
             {
                 ItemSlot inputSlot = val.Key;
-                CraftingRecipeIngredient ingred = val.Value;
+                TagIngredient ingred = val.Value;
                 int posChange = inputSlot.StackSize / ingred.Quantity;
 
                 if (posChange < outQuantityMul || outQuantityMul == -1) outQuantityMul = posChange;
@@ -223,7 +224,7 @@ namespace ACulinaryArtillery
             foreach (var val in matched)
             {
                 ItemSlot inputSlot = val.Key;
-                CraftingRecipeIngredient ingred = val.Value;
+                TagIngredient ingred = val.Value;
 
 
                 // Must have same or more than the total crafted amount
@@ -689,7 +690,7 @@ namespace ACulinaryArtillery
         public bool Enabled { get; set; } = true;
 
 
-        public CraftingRecipeIngredient[] Ingredients;
+        public TagIngredient[] Ingredients;
 
         public CombustibleProperties Simmering;
 
@@ -728,7 +729,7 @@ namespace ACulinaryArtillery
         {
             int outputStackSize = 0;
 
-            List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>> matched = pairInput(inputSlots);
+            List<KeyValuePair<ItemSlot, TagIngredient>> matched = pairInput(inputSlots);
             if (matched == null) return false;
 
             outputStackSize = getOutputSize(matched);
@@ -747,14 +748,14 @@ namespace ACulinaryArtillery
             if (Inputs.Count != Ingredients.Length) //not the correct amount of ingredients for that recipe
                 return 0;
 
-            List<CraftingRecipeIngredient> matched = new List<CraftingRecipeIngredient>();
+            List<TagIngredient> matched = new List<TagIngredient>();
             int amountForTheRecipe = -1;
 
             foreach (ItemStack input in Inputs)
             {
-                CraftingRecipeIngredient match = null;
+                TagIngredient match = null;
 
-                foreach (CraftingRecipeIngredient ing in Ingredients)   //check if this input item is in the recipe
+                foreach (TagIngredient ing in Ingredients)   //check if this input item is in the recipe
                 {
                     if (
                         (ing.ResolvedItemstack == null && !ing.IsWildCard)  //this ingredient is somehow null, but is not a wildcard
@@ -802,7 +803,7 @@ namespace ACulinaryArtillery
             return amountForTheRecipe;
         }
 
-        List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>> pairInput(ItemSlot[] inputStacks)
+        List<KeyValuePair<ItemSlot, TagIngredient>> pairInput(ItemSlot[] inputStacks)
         {
             List<int> alreadyFound = new List<int>();
 
@@ -811,7 +812,7 @@ namespace ACulinaryArtillery
 
             if (inputSlotsList.Count != Ingredients.Length) return null;
 
-            List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>> matched = new List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>>();
+            List<KeyValuePair<ItemSlot, TagIngredient>> matched = new List<KeyValuePair<ItemSlot, TagIngredient>>();
 
             while (inputSlotsList.Count > 0)
             {
@@ -823,7 +824,7 @@ namespace ACulinaryArtillery
 
                     if (Ingredients[i].SatisfiesAsIngredient(inputSlot.Itemstack) && !alreadyFound.Contains(i))
                     {
-                        matched.Add(new KeyValuePair<ItemSlot, CraftingRecipeIngredient>(inputSlot, Ingredients[i]));
+                        matched.Add(new KeyValuePair<ItemSlot, TagIngredient>(inputSlot, Ingredients[i]));
                         alreadyFound.Add(i);
                         found = true;
                         break;
@@ -843,14 +844,14 @@ namespace ACulinaryArtillery
         }
 
 
-        int getOutputSize(List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>> matched)
+        int getOutputSize(List<KeyValuePair<ItemSlot, TagIngredient>> matched)
         {
             int outQuantityMul = -1;
 
             foreach (var val in matched)
             {
                 ItemSlot inputSlot = val.Key;
-                CraftingRecipeIngredient ingred = val.Value;
+                TagIngredient ingred = val.Value;
                 int posChange = inputSlot.StackSize / ingred.Quantity;
 
                 if (posChange < outQuantityMul || outQuantityMul == -1) outQuantityMul = posChange;
@@ -865,7 +866,7 @@ namespace ACulinaryArtillery
             foreach (var val in matched)
             {
                 ItemSlot inputSlot = val.Key;
-                CraftingRecipeIngredient ingred = val.Value;
+                TagIngredient ingred = val.Value;
 
 
                 // Must have same or more than the total crafted amount
@@ -921,11 +922,11 @@ namespace ACulinaryArtillery
         public void FromBytes(BinaryReader reader, IWorldAccessor resolver)
         {
             Code = reader.ReadString();
-            Ingredients = new CraftingRecipeIngredient[reader.ReadInt32()];
+            Ingredients = new TagIngredient[reader.ReadInt32()];
 
             for (int i = 0; i < Ingredients.Length; i++)
             {
-                Ingredients[i] = new CraftingRecipeIngredient();
+                Ingredients[i] = new TagIngredient();
                 Ingredients[i].FromBytes(reader, resolver);
                 Ingredients[i].Resolve(resolver, "Simmer Recipe (FromBytes)");
             }
@@ -946,7 +947,7 @@ namespace ACulinaryArtillery
 
         public SimmerRecipe Clone()
         {
-            CraftingRecipeIngredient[] ingredients = new CraftingRecipeIngredient[Ingredients.Length];
+            TagIngredient[] ingredients = new TagIngredient[Ingredients.Length];
             for (int i = 0; i < Ingredients.Length; i++)
             {
                 ingredients[i] = Ingredients[i].Clone();
@@ -971,7 +972,8 @@ namespace ACulinaryArtillery
             foreach (var ingreds in Ingredients)
             {
                 if (Ingredients.Length <= 0) continue;
-                CraftingRecipeIngredient ingred = ingreds;
+                TagIngredient ingred = ingreds;
+                if (ingred?.AllowedTags != null || ingred?.Category != null || ingred?.BannedTags != null || ingred?.SpecialTags != null) continue;
                 if (ingred == null || !ingred.Code.Path.Contains("*") || ingred.Name == null) continue;
 
                 int wildcardStartLen = ingred.Code.Path.IndexOf("*");
@@ -1095,6 +1097,7 @@ namespace ACulinaryArtillery
         public List<DoughRecipe> DoughRecipes = new List<DoughRecipe>();
 
         public List<SimmerRecipe> SimmerRecipes = new List<SimmerRecipe>();
+        public List<TagDoughRecipe> TagDoughRecipes = new List<TagDoughRecipe>();
 
         public override double ExecuteOrder()
         {
@@ -1109,8 +1112,9 @@ namespace ACulinaryArtillery
         public override void Start(ICoreAPI api)
         {
             MixingRecipes = api.RegisterRecipeRegistry<RecipeRegistryGeneric<CookingRecipe>>("mixingrecipes").Recipes;
-            DoughRecipes = api.RegisterRecipeRegistry<RecipeRegistryGeneric<DoughRecipe>>("doughrecipes").Recipes;
+            //DoughRecipes = api.RegisterRecipeRegistry<RecipeRegistryGeneric<DoughRecipe>>("doughrecipes").Recipes;
             SimmerRecipes = api.RegisterRecipeRegistry<RecipeRegistryGeneric<SimmerRecipe>>("simmerrecipes").Recipes;
+            TagDoughRecipes = api.RegisterRecipeRegistry<RecipeRegistryGeneric<TagDoughRecipe>>("tagdoughrecipes").Recipes;
         }
 
         public override void AssetsLoaded(ICoreAPI api)
@@ -1120,10 +1124,41 @@ namespace ACulinaryArtillery
                 return;
             }
             loadMixingRecipes(coreServerAPI);
-            loadDoughRecipes(coreServerAPI);
+            //loadDoughRecipes(coreServerAPI);
             loadSimmerRecipes(coreServerAPI);
+            loadTagDoughRecipes(coreServerAPI);
 
 
+        }
+        void loadTagDoughRecipes(ICoreServerAPI coreServerAPI)
+        {
+            Dictionary<AssetLocation, JToken> files = coreServerAPI.Assets.GetMany<JToken>(coreServerAPI.Server.Logger, "recipes/kneading");
+            int recipeQuantity = 0;
+            int ignored = 0;
+
+            foreach (var val in files)
+            {
+                if (val.Value is JObject)
+                {
+                    TagDoughRecipe rec = val.Value.ToObject<TagDoughRecipe>();
+                    if (!rec.Enabled) continue;
+
+                    LoadTagKneadingRecipe(val.Key, rec, coreServerAPI, ref recipeQuantity, ref ignored);
+                }
+                if (val.Value is JArray)
+                {
+                    foreach (var token in (val.Value as JArray))
+                    {
+                        TagDoughRecipe rec = token.ToObject<TagDoughRecipe>();
+                        if (!rec.Enabled) continue;
+
+                        LoadTagKneadingRecipe(val.Key, rec, coreServerAPI, ref recipeQuantity, ref ignored);
+                    }
+                }
+            }
+
+            coreServerAPI.World.Logger.Event("{0} kneading recipes loaded", recipeQuantity);
+            coreServerAPI.World.Logger.StoryEvent(Lang.Get("aculinaryartillery:The butter and the bread..."));
         }
         void loadMixingRecipes(ICoreServerAPI coreServerAPI)
         {
@@ -1258,7 +1293,7 @@ namespace ACulinaryArtillery
                             foreach (var ingreds in rec.Ingredients)
                             {
                                 if (rec.Ingredients.Length <= 0) continue;
-                                CraftingRecipeIngredient ingred = ingreds;
+                                TagIngredient ingred = ingreds;
 
                                 if (ingred.Name == variantCode)
                                 {
@@ -1384,6 +1419,98 @@ namespace ACulinaryArtillery
                 RegisterDoughRecipe(recipe);
                 quantityRegistered++;
             }
+        }
+        void LoadTagKneadingRecipe(AssetLocation path, TagDoughRecipe recipe, ICoreServerAPI coreServerAPI, ref int quantityRegistered, ref int quantityIgnored)
+        {
+            if (!recipe.Enabled) return;
+            if (recipe.Name == null) recipe.Name = path;
+            string className = "tagkneading recipe";
+
+            Dictionary<string, string[]> nameToCodeMapping = recipe.GetNameToCodeMapping(coreServerAPI.World);
+
+            if (nameToCodeMapping.Count > 0)
+            {
+                List<TagDoughRecipe> subRecipes = new List<TagDoughRecipe>();
+
+                int qCombs = 0;
+                bool first = true;
+                foreach (var val2 in nameToCodeMapping)
+                {
+                    if (first) qCombs = val2.Value.Length;
+                    else qCombs *= val2.Value.Length;
+                    first = false;
+                }
+
+                first = true;
+                foreach (var val2 in nameToCodeMapping)
+                {
+                    string variantCode = val2.Key;
+                    string[] variants = val2.Value;
+
+                    for (int i = 0; i < qCombs; i++)
+                    {
+                        TagDoughRecipe rec;
+
+                        if (first) subRecipes.Add(rec = recipe.Clone());
+                        else rec = subRecipes[i];
+
+                        if (rec.Ingredients != null)
+                        {
+                            foreach (var ingreds in rec.Ingredients)
+                            {
+                                if (ingreds.Inputs.Length <= 0) continue;
+                                TagIngredient ingred = ingreds.Inputs[0];
+
+                                if (ingred.Name == variantCode)
+                                {
+                                    ingred.Code = ingred.Code.CopyWithPath(ingred.Code.Path.Replace("*", variants[i % variants.Length]));
+                                }
+                            }
+                        }
+
+                        rec.Output.FillPlaceHolder(val2.Key, variants[i % variants.Length]);
+                    }
+
+                    first = false;
+                }
+
+                if (subRecipes.Count == 0)
+                {
+                    coreServerAPI.World.Logger.Warning("{1} file {0} make uses of wildcards, but no blocks or item matching those wildcards were found.", path, className);
+                }
+
+                foreach (TagDoughRecipe subRecipe in subRecipes)
+                {
+                    if (!subRecipe.Resolve(coreServerAPI.World, className + " " + path))
+                    {
+                        quantityIgnored++;
+                        continue;
+                    }
+                    RegisterTagDoughRecipe(subRecipe);
+                    quantityRegistered++;
+                }
+
+            }
+            else
+            {
+                if (!recipe.Resolve(coreServerAPI.World, className + " " + path))
+                {
+                    quantityIgnored++;
+                    return;
+                }
+
+                RegisterTagDoughRecipe(recipe);
+                quantityRegistered++;
+            }
+        }
+        public void RegisterTagDoughRecipe(TagDoughRecipe doughRecipe)
+        {
+            if (!canRegister)
+            {
+                throw new InvalidOperationException("Coding error: Can no long register tagdough recipes. Register them during AssetsLoad/AssetsFinalize and with ExecuteOrder < 99999");
+            }
+
+            TagDoughRecipes.Add(doughRecipe);
         }
         public void RegisterCookingRecipe(CookingRecipe cookingrecipe)
         {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ACulinaryArtillery.Util;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,6 +11,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 using Vintagestory.GameContent.Mechanics;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace ACulinaryArtillery
 {
@@ -295,6 +297,7 @@ namespace ACulinaryArtillery
         {
             CookingRecipe recipe = GetMatchingMixingRecipe(Api.World, IngredStacks);
             DoughRecipe drecipe = GetMatchingDoughRecipe(Api.World, IngredSlots);
+            TagDoughRecipe tdrecipe = GetMatchingTagDoughRecipe(Api.World, IngredSlots);
             ItemStack mixedStack;
             int servings = 0;
             ItemStack[] stacks = IngredStacks;
@@ -355,6 +358,10 @@ namespace ACulinaryArtillery
             else if (drecipe != null)
             {
                 mixedStack = drecipe.TryCraftNow(Api, IngredSlots);
+            }
+            else if (tdrecipe != null)
+            {
+                mixedStack = tdrecipe.TryCraftNow(Api, IngredSlots);
             }
             else return;
 
@@ -516,7 +523,7 @@ namespace ACulinaryArtillery
 
         public bool CanMix()
         {
-            return GetMatchingMixingRecipe(Api.World, IngredStacks) != null || GetMatchingDoughRecipe(Api.World, IngredSlots) != null;
+            return GetMatchingMixingRecipe(Api.World, IngredStacks) != null || GetMatchingDoughRecipe(Api.World, IngredSlots) != null || GetMatchingTagDoughRecipe(Api.World, IngredSlots) != null;
         }
 
 
@@ -805,7 +812,23 @@ namespace ACulinaryArtillery
 
             return true;
         }
+        public TagDoughRecipe GetMatchingTagDoughRecipe(IWorldAccessor world, ItemSlot[] slots)
+        {
+            if (Pot != null) return null;
+            //List<DoughRecipe> recipes = MixingRecipeRegistry.Registry.KneadingRecipes;
+            var recipes = Api.GetTagDoughRecipes();
+            if (recipes == null) return null;
 
+            for (int j = 0; j < recipes.Count; j++)
+            {
+                if (recipes[j].Matches(Api.World, slots))
+                {
+                    return recipes[j];
+                }
+            }
+
+            return null;
+        }
         public CookingRecipe GetMatchingMixingRecipe(IWorldAccessor world, ItemStack[] stacks)
         {
             if (Pot == null) return null;
@@ -855,6 +878,7 @@ namespace ACulinaryArtillery
         {
             CookingRecipe recipe = GetMatchingMixingRecipe(Api.World, IngredStacks);
             DoughRecipe drecipe = GetMatchingDoughRecipe(Api.World, IngredSlots);
+            TagDoughRecipe tdrecipe = GetMatchingTagDoughRecipe(Api.World, IngredSlots);
             string locked = invLocked ? Lang.Get("aculinaryartillery:(Locked) ") : "";
 
             if (recipe != null)
@@ -873,6 +897,7 @@ namespace ACulinaryArtillery
             {
                 return locked + drecipe.GetOutputName();
             }
+            else if (tdrecipe != null) { return locked + tdrecipe.GetOutputName(); }
 
             return locked;
 

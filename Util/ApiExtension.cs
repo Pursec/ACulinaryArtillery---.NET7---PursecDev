@@ -1,4 +1,5 @@
 ﻿using ACulinaryArtillery;
+using ACulinaryArtillery.Util;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
@@ -19,5 +20,9 @@ public static class ApiAdditions
     public static List<DoughRecipe> GetKneadingRecipes(this ICoreAPI api)
     {
         return api.ModLoader.GetModSystem<ACARecipeRegistrySystem>().DoughRecipes;
+    }
+    public static List<TagDoughRecipe> GetTagDoughRecipes(this ICoreAPI api)
+    {
+        return api.ModLoader.GetModSystem<ACARecipeRegistrySystem>().TagDoughRecipes;
     }
 }

@@ -12,6 +12,7 @@ using Vintagestory.API.Datastructures;
 using System.IO;
 //using static ACulinaryArtillery.acaRecipeLoader;
 using System.Linq;
+using ACulinaryArtillery.Util;
 
 namespace ACulinaryArtillery
 {
@@ -177,17 +178,17 @@ namespace ACulinaryArtillery
                 //if the recipe produces something from Expanded Foods
                 if (product.Collectible is IExpandedFood)
                 {
-                    List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>> input = new List<KeyValuePair<ItemSlot, CraftingRecipeIngredient>>();
+                    List<KeyValuePair<ItemSlot, TagIngredient>> input = new List<KeyValuePair<ItemSlot, TagIngredient>>();
                     List<ItemSlot> alreadyfound = new List<ItemSlot>();
 
-                    foreach (CraftingRecipeIngredient ing in match.Ingredients) //for each ingredient in the recipe
+                    foreach (TagIngredient ing in match.Ingredients) //for each ingredient in the recipe
                     {
                         foreach (ItemSlot slot in cookingSlotsProvider.Slots)
                         {
                             if (!alreadyfound.Contains(slot) && !slot.Empty && ing.SatisfiesAsIngredient(slot.Itemstack))
                             {
                                 alreadyfound.Add(slot);
-                                input.Add(new KeyValuePair<ItemSlot, CraftingRecipeIngredient>(slot, ing));
+                                input.Add(new KeyValuePair<ItemSlot, TagIngredient>(slot, ing));
                                 break;
                             }
                         }

@@ -1,0 +1,73 @@
+[
+  {
+    "enabled":  false,
+    "ingredients": [
+      {
+        "inputs": [
+          {
+            "type": "item",
+            "code": "expandedfoods:plaindoughball-dough",
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "inputs": [
+          {
+            "type": "item",
+            "Category": "Fruit",
+            "AllowedTags": [ "Dehydrated", "Dried", "Gelatin", "Candied" ],
+            "BannedTags": [ "Fresh" ],
+            "SpecialTags": ["Salt"],
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "inputs": [
+          {
+            "type": "item",
+            "Category": "Fruit",
+            "AllowedTags": [ "Dehydrated", "Dried", "Candied" ],
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "inputs": [
+          {
+            "type": "item",
+            "Category": "Fruit",
+            "AllowedTags": [ "Dehydrated", "Dried", "Candied" ],
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "inputs": [
+          {
+            "type": "item",
+            "Category": "Fruit",
+            "AllowedTags": [ "Dehydrated", "Dried", "Candied" ],
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "inputs": [
+          {
+            "type": "item",
+            "Category": "Fruit",
+            "AllowedTags": [ "Dehydrated", "Dried", "Candied" ],
+            "quantity": 1
+          }
+        ]
+      }
+    ],
+    "output": {
+      "type": "item",
+      "code": "expandedfoods:muffin-dough",
+      "stackSize": 1
+    }
+  }
+]
