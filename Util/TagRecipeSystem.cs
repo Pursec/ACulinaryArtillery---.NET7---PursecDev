@@ -440,7 +440,7 @@ namespace ACulinaryArtillery.Util
         public TagIngredient GetMatch(ItemStack stack)
         {
             if (stack == null) return null;
-            ACulinaryArtillery.logger.Debug("Trying to match: " + stack.ToString());
+            //ACulinaryArtillery.logger.Debug("Trying to match: " + stack.ToString());
             for (int i = 0; i < Inputs.Length; i++)
             {
                 if (Inputs[i].SatisfiesAsIngredient(stack)) return Inputs[i];

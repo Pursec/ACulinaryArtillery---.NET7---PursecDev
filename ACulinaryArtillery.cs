@@ -1,6 +1,8 @@
-﻿using ACulinaryArtillery.Util;
+﻿using ACulinaryArtillery.GUI;
+using ACulinaryArtillery.Util;
 using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Vintagestory.API.Client;
@@ -8,7 +10,9 @@ using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.Client.NoObf;
+using Vintagestory.Common;
 using Vintagestory.GameContent;
+using Vintagestory.Server;
 
 namespace ACulinaryArtillery
 {
@@ -16,11 +20,13 @@ namespace ACulinaryArtillery
     {
         private static Harmony harmony;
         public static ILogger logger;
-
+        ICoreAPI API;
+        IClientNetworkChannel ClientChannel;
+        IServerNetworkChannel ServerChannel;
         public override void Start(ICoreAPI api)
         {
             //base.Start(api);
-
+            API = api;
             api.RegisterBlockClass("BlockMeatHooks", typeof(BlockMeatHooks));
             api.RegisterBlockEntityClass("MeatHooks", typeof(BlockEntityMeatHooks));
 
@@ -53,7 +59,11 @@ namespace ACulinaryArtillery
             api.RegisterItemClass("TransLiquid", typeof(ItemTransLiquid));
             api.RegisterItemClass("ExpandedLiquid", typeof(ItemExpandedLiquid));
             api.RegisterItemClass("ExpandedDough", typeof(ItemExpandedDough));
-
+            ClassRegistry classRegistry = (api as ServerCoreAPI)?.ClassRegistryNative ?? (api as ClientCoreAPI)?.ClassRegistryNative;
+            if (classRegistry != null)
+            {
+                classRegistry.RegisterInventoryClass("inventoryRecipeCreator", typeof(InventoryRecipeCreator));
+            }
             //Check for Existing Config file, create one if none exists
             try
             {
@@ -88,8 +98,23 @@ namespace ACulinaryArtillery
             
         }
         public override void StartClientSide(ICoreClientAPI api)
-        {
+        {   
             base.StartClientSide(api);
+            ClientChannel = api.Network.RegisterChannel("clearRecipeCreatorInv").RegisterMessageType(typeof(bool));
+            /*
+            api.Event.PlayerJoin += (player) =>
+            {
+                if (player.InventoryManager.GetOwnInventory("inventoryRecipeCreator") == null)
+                {
+                    logger.Debug("CLIENT: Could not find recipeCreator Inventory on player join, attempting to make");
+                    InventoryRecipeCreator inv = (api as ClientCoreAPI)?.ClassRegistryNative.CreateInventory("inventoryRecipeCreator", "inventoryRecipeCreator-" + player.PlayerUID, api) as InventoryRecipeCreator;
+                    logger.Debug($"{inv.InventoryID}");
+                    player.InventoryManager.Inventories.Add(inv.InventoryID, inv);
+                    logger.Debug($"CLIENT: Found inv I just added?: {player.InventoryManager.GetOwnInventory("inventoryRecipeCreator") != null}");
+                };
+            };
+            */
+            (api as ICoreClientAPI).Gui.RegisterDialog(new GuiRecipeCreator(api));
             var meatHookTransformConfig = new TransformConfig
             {
                 AttributeName = "meatHookTransform",
@@ -107,8 +132,35 @@ namespace ACulinaryArtillery
         }
         public override void StartServerSide(ICoreServerAPI api)
         {
+            ServerChannel = api.Network.RegisterChannel("clearRecipeCreatorInv").RegisterMessageType(typeof(bool)).SetMessageHandler<bool>(ClearRecipeCreatorInv);
+            api.Event.PlayerJoin += (player) =>
+            {
+                if(player.InventoryManager.GetOwnInventory("inventoryRecipeCreator") == null)
+                {
+                    InventoryRecipeCreator inv = new InventoryRecipeCreator("inventoryRecipeCreator", player.PlayerUID, player.Entity.Api);
+                    (player.InventoryManager as PlayerInventoryManager).Inventories.Add(inv.InventoryID, inv);
+                    var lines = player.InventoryManager.Inventories.Select(kvp => kvp.Key + ": " + kvp.Value.ToString());
+                    string outputString = string.Join(Environment.NewLine, lines);
+                    logger.Debug(outputString);
+                }
+
+            };
+            /*
+            api.Event.PlayerNowPlaying += (player) =>
+            {
+                if (player.InventoryManager.GetOwnInventory("inventoryRecipeCreator") == null)
+                {
+                    logger.Debug("SERVER: Could not find recipeCreator Inventory on player join, attempting to make");
+                    InventoryRecipeCreator inv = (api as ServerCoreAPI)?.ClassRegistryNative.CreateInventory("inventoryRecipeCreator", "inventoryRecipeCreator-" + player.PlayerUID, api) as InventoryRecipeCreator;
+                    logger.Debug($"{inv.InventoryID}");
+                    player.InventoryManager.Inventories.Add("inventoryRecipeCreator", inv);
+                    logger.Debug($"SERVER: Found inv I just added?: {player.InventoryManager.GetOwnInventory("inventoryRecipeCreator") != null}");
+                };
+            };
+            */
             //base.StartServerSide(api);
 
+            /*
             api.RegisterCommand("efremap", "Remaps items in Expanded Foods", "",
                 //This can't possibly work XD
                 (IServerPlayer player, int groupId, CmdArgs args) =>
@@ -118,6 +170,16 @@ namespace ACulinaryArtillery
                         BottleFix(new BlockPos(posX, posY, posZ), block, api.World);
                     });
                 }, Privilege.chat);
+            */
+        }
+
+        private void ClearRecipeCreatorInv(IServerPlayer fromPlayer, bool packet)
+        {
+            if(packet) 
+            {
+                logger.Debug("Received packet to clear inv");
+                (fromPlayer.InventoryManager.GetOwnInventory("inventoryRecipeCreator") as InventoryRecipeCreator).DiscardAll();
+            };
         }
 
         public void BottleFix(BlockPos pos, Block block, IWorldAccessor world)

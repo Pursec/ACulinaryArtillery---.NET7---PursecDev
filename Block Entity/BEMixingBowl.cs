@@ -1,4 +1,5 @@
 ﻿using ACulinaryArtillery.Util;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +10,7 @@ using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.Client;
 using Vintagestory.GameContent;
 using Vintagestory.GameContent.Mechanics;
 using static System.Reflection.Metadata.BlobBuilder;
