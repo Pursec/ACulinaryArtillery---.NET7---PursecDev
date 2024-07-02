@@ -11,6 +11,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.API.Util;
 using Vintagestory.Client;
 using Vintagestory.Client.NoObf;
 using Vintagestory.Common;
@@ -86,6 +87,7 @@ namespace ACulinaryArtillery.GUI
             Kneading
         }
         recType OutPutRecipeType = recType.Kneading;
+        string outputJson = "";
         string OutPutRecipeTypeString => OutPutRecipeType.ToString();
         public GuiRecipeCreator(ICoreClientAPI capi)
     : base(capi)
@@ -127,7 +129,7 @@ namespace ACulinaryArtillery.GUI
         {
             ElementBounds dialogBounds = ElementStdBounds.AutosizedMainDialog.WithAlignment(EnumDialogArea.CenterMiddle);
 
-            ElementBounds slotElementBounds = ElementBounds.Fixed(10, 30, 1, 1);
+            ElementBounds slotElementBounds = ElementBounds.Fixed(10, 50, 1, 1);
             slotElementBounds.BothSizing = ElementSizing.FitToChildren;
 
             ElementBounds outputSlotBounds = ElementStdBounds.SlotGrid(EnumDialogArea.RightBottom, 0, 10, 1, 1);
@@ -145,11 +147,15 @@ namespace ACulinaryArtillery.GUI
             ElementBounds clearBtnBounds = ElementStdBounds.ToggleButton(0, 0, 25, 25);
             clearBtnBounds.WithAlignment(EnumDialogArea.CenterBottom);
             clearBtnBounds.WithFixedAlignmentOffset(30, 0);
-            ElementBounds buttonRow = ElementStdBounds.Rowed(1, 25);
 
-            ElementBounds guiBounds = ElementBounds.Fixed(0, 0, 300, 300);
+            ElementBounds jsonOutPut = ElementBounds.FixedSize(400, 400);
+            //jsonOutPut.BothSizing = ElementSizing.FitToChildren;
+            ElementBounds textArea = ElementBounds.FixedSize(400.0, 400.0);
+            ElementBounds scrollbarBounds = ElementStdBounds.VerticalScrollbar(jsonOutPut);
+            scrollbarBounds.WithParent(jsonOutPut);
+            ElementBounds guiBounds = ElementBounds.Fixed(0, 0, 400, 600);
             ElementBounds bgBounds = ElementBounds.Fill.WithFixedPadding(GuiStyle.ElementToDialogPadding);
-
+            ElementBounds test = ElementBounds.FixedSize(100, 50);
             bgBounds.BothSizing = ElementSizing.FitToChildren;
             bgBounds.WithChildren(guiBounds);
 
@@ -160,18 +166,43 @@ namespace ACulinaryArtillery.GUI
                 .BeginChildElements(bgBounds)
                     .BeginChildElements(slotElementBounds)
                         .AddItemSlotGrid(Inventory, SendInvPacket, 6, new int[] { 0, 1, 2, 3, 4, 5 }, ingredSlotBounds, "ingredSlots")
-                        .AddItemSlotGrid(Inventory, SendInvPacket, 1, new int[] {6}, outputSlotBounds, "outputSlot")
-                        .AddDynamicText(OutPutRecipeTypeString, CairoFont.WhiteDetailText().WithFontSize(30), outPutTextBounds, "outputText")
+                        .AddItemSlotGrid(Inventory, SendInvPacket, 1, new int[] { 6 }, outputSlotBounds, "outputSlot")
+                        .AddDynamicText(OutPutRecipeTypeString, CairoFont.WhiteDetailText().Clone().WithFontSize(30), outPutTextBounds, "outputText")
                     .EndChildElements()
+                    .AddStaticText("Json Code", CairoFont.WhiteDetailText(), test.FixedUnder(slotElementBounds, 100))
+                    .BeginClip(jsonOutPut.FixedUnder(slotElementBounds, 125))
+                    .AddTextArea(textArea, onTextChanged, CairoFont.WhiteSmallText(), "textareajson")
+                    .EndClip()
+                    .AddVerticalScrollbar(onNewScrollbarValue, scrollbarBounds, "scrollbar")
                     .AddSmallButton("Change Recipe Type", ChangeRecType, changeBtnBounds)
                     .AddSmallButton("Clear", Clear, clearBtnBounds)
                     .AddSmallButton("Copy Recipe", OnCopyRecipe, copyRecipeBtnBounds)
                 .EndChildElements()
                 .Compose();
+            SingleComposer.GetScrollbar("scrollbar").SetHeights((float)20, (float)textArea.fixedHeight + 100);
         }
-
+        private void onNewScrollbarValue(float value)
+        {
+            GuiElementTextArea textArea = SingleComposer.GetTextArea("textareajson");
+            textArea.Bounds.fixedY = 1 - value;
+            textArea.Bounds.CalcWorldBounds();
+        }
+        private void onTextChanged(string text)
+        {
+            outputJson = text;
+        }
         private void SendInvPacket(object p)
         {
+            if (Inventory[6].Empty)
+            {
+                SingleComposer.GetTextArea("textareajson").SetValue("");
+            }
+            else
+            {
+                getJson();
+                SingleComposer.GetTextArea("textareajson").SetValue(outputJson);
+            }
+
             capi.Network.SendPacketClient(p);
         }
         private void OnTitleBarClose()
@@ -183,12 +214,21 @@ namespace ACulinaryArtillery.GUI
         {
             Inventory.DiscardAll();
             capi.Network.GetChannel("clearRecipeCreatorInv").SendPacket(true);
+            outputJson = "";
+            SingleComposer.GetTextArea("textareajson").SetValue("");
+
             return true;
         }
         private bool ChangeRecType()
         {
             if(OutPutRecipeType == recType.Kneading) { OutPutRecipeType = recType.Simmering; } else { OutPutRecipeType = recType.Kneading; }
             SingleComposer.GetDynamicText("outputText").SetNewText(OutPutRecipeTypeString);
+            if (!Inventory[6].Empty) 
+            {
+                getJson();
+                SingleComposer.GetTextArea("textareajson").SetValue(outputJson);
+            }
+            
             return true;
         }
         private bool OnCopyRecipe()
@@ -196,15 +236,14 @@ namespace ACulinaryArtillery.GUI
             if (Inventory[6].Empty)
             {
                 capi.ShowChatMessage("Need an item in the output slot");
+                SingleComposer.GetTextArea("textareajson").SetValue("");
                 return false;
             }
-            ScreenManager.Platform.XPlatInterface.SetClipboardText(getJson());
+            ScreenManager.Platform.XPlatInterface.SetClipboardText(outputJson);
             return true;
         }
-        private string getJson()
+        private void getJson()
         {
-
-            //List<inputStub> tmpinputs = new List<inputStub>();
             object recipe = null;
             if(OutPutRecipeType == recType.Kneading)
             {
@@ -233,8 +272,7 @@ namespace ACulinaryArtillery.GUI
                 simmeringPropsStub tmpSimmerProps = new simmeringPropsStub { meltingPoint = 200, meltingDuration = 20, smeltedRatio = 1, smeltingType = "bake", smeltedStack = tmpoutput, requiresContainer = false};
                 recipe = new recipeStubSimmering { enabled = true, ingredients = tmpIngredients,  Simmering = tmpSimmerProps };
             }
-
-            return JsonConvert.SerializeObject(recipe, Formatting.Indented);
+            outputJson = JsonConvert.SerializeObject(recipe, Formatting.Indented);
         }
         public override string ToggleKeyCombinationCode => null;
     }
