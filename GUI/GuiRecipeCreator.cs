@@ -270,7 +270,7 @@ namespace ACulinaryArtillery.GUI
                 }
                 smeltedStackStub tmpoutput = new smeltedStackStub {type = Inventory[6].Itemstack.Collectible.ItemClass.Name(), code = Inventory[6].Itemstack.Collectible.Code.ToString()};
                 simmeringPropsStub tmpSimmerProps = new simmeringPropsStub { meltingPoint = 200, meltingDuration = 20, smeltedRatio = 1, smeltingType = "bake", smeltedStack = tmpoutput, requiresContainer = false};
-                recipe = new recipeStubSimmering { enabled = true, ingredients = tmpIngredients,  Simmering = tmpSimmerProps };
+                recipe = new recipeStubSimmering { enabled = true, Ingredients = tmpIngredients,  Simmering = tmpSimmerProps };
             }
             outputJson = JsonConvert.SerializeObject(recipe, Formatting.Indented);
         }
@@ -298,7 +298,7 @@ namespace ACulinaryArtillery.GUI
     }
     public class recipeStubSimmering
     {
-        public List<inputStub> ingredients;
+        public List<inputStub> Ingredients;
         public bool enabled = true;
         public simmeringPropsStub Simmering;
     }
